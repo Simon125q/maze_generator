@@ -3,7 +3,7 @@ import sys
 from random import choice
 
 RES = WIDTH, HEIGHT = (1202, 902)
-TILE = 100
+TILE = 15
 COLS = WIDTH // TILE
 ROWS = HEIGHT // TILE
 FPS = 60
@@ -16,16 +16,42 @@ class Game:
         self.grid_cells = [Cell(col, row) for row in range(ROWS) for col in range(COLS)]
         self.current_cell = self.grid_cells[0]
         self.stack = []
+        self.colors = []
+        self.color = 34
+    
+    def remove_walls(self):
+        dx = self.current_cell.x - self.next_cell.x
+        if dx == 1:
+            self.current_cell.walls['left'] = False
+            self.next_cell.walls['right'] = False
+        elif dx == -1:
+            self.current_cell.walls['right'] = False
+            self.next_cell.walls['left'] = False
+            
+        dy = self.current_cell.y - self.next_cell.y
+        if dy == 1:
+            self.current_cell.walls['top'] = False
+            self.next_cell.walls['bottom'] = False
+        elif dy == -1:
+            self.current_cell.walls['bottom'] = False
+            self.next_cell.walls['top'] = False
     
     def draw(self):
-        self.screen.fill(pygame.Color('darkslategray'))
+        self.screen.fill(pygame.Color('plum'))
         [cell.draw(self.screen) for cell in self.grid_cells]
         self.current_cell.visited = True
         self.current_cell.draw_current_cell(self.screen)
-        next_cell = self.current_cell.check_neighbors(self.grid_cells)
-        if next_cell:
-            next_cell.visited = True
-            self.current_cell = next_cell
+        [pygame.draw.rect(self.screen, self.colors[i], (cell.x * TILE + 5, cell.y * TILE + 5, TILE -10, TILE - 10), border_radius = 12) for i, cell in enumerate(self.stack)]
+        self.next_cell = self.current_cell.check_neighbors(self.grid_cells)
+        if self.next_cell:
+            self.next_cell.visited = True
+            self.stack.append(self.current_cell)
+            self.colors.append((min(self.color, 255), 10, 100))
+            self.color += 2
+            self.remove_walls()
+            self.current_cell = self.next_cell
+        elif self.stack:
+            self.current_cell = self.stack.pop()
     
     def check_events(self):
         
@@ -65,17 +91,17 @@ class Cell:
             pygame.draw.rect(screen, pygame.Color('black'), (x, y, TILE, TILE))
         
         if self.walls['top']:
-            pygame.draw.line(screen, pygame.Color('darkorange'), (x, y), (x + TILE, y), 2)
+            pygame.draw.line(screen, pygame.Color('magenta3'), (x, y), (x + TILE, y), 2)
         if self.walls['right']:
-            pygame.draw.line(screen, pygame.Color('darkorange'), (x + TILE, y), (x + TILE, y + TILE), 2)
+            pygame.draw.line(screen, pygame.Color('magenta3'), (x + TILE, y), (x + TILE, y + TILE), 2)
         if self.walls['bottom']:
-            pygame.draw.line(screen, pygame.Color('darkorange'), (x + TILE, y + TILE), (x, y + TILE), 2)
+            pygame.draw.line(screen, pygame.Color('magenta3'), (x + TILE, y + TILE), (x, y + TILE), 2)
         if self.walls['left']:
-            pygame.draw.line(screen, pygame.Color('darkorange'), (x, y + TILE), (x, y), 2)
+            pygame.draw.line(screen, pygame.Color('magenta3'), (x, y + TILE), (x, y), 2)
             
     def check_cell(self,x, y, grid_cells):
         find_index = lambda x, y: x + y * COLS
-        if x < 0 or x > COLS + 1 or y < 0 or y > ROWS -1 :
+        if x < 0 or x > COLS - 1 or y < 0 or y > ROWS -1 :
             return False
         return grid_cells[find_index(x, y)]
         
