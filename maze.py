@@ -1,12 +1,13 @@
 import pygame
 import sys
 from random import choice
+import csv
 
 RES = WIDTH, HEIGHT = (1202, 902)
-TILE = 15
+TILE = 50
 COLS = WIDTH // TILE
 ROWS = HEIGHT // TILE
-FPS = 60
+FPS = 260
 
 class Game:
     def __init__(self):
@@ -18,6 +19,8 @@ class Game:
         self.stack = []
         self.colors = []
         self.color = 34
+        self.loop = True
+        self.paused = False
     
     def remove_walls(self):
         dx = self.current_cell.x - self.next_cell.x
@@ -60,13 +63,66 @@ class Game:
                 pygame.quit()
                 sys.exit()
                 
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    self.loop = False
+                if event.key == pygame.K_1:
+                    self.print_maze()
+                if event.key == pygame.K_ESCAPE:
+                    self.save_to_csv()
+                
     def update(self):
         pygame.display.flip()
         self.clock.tick(FPS)
         pygame.display.set_caption('MAZE GENERATOR')
+    
+    def create_ascii_grid(self):
+        ascii_grid = [['#','##'*COLS]]
+        top = ['#']
+        mid = ['#']
+        bottom = ['#']
+        for index, cell in enumerate(self.grid_cells):
+            walls = cell.walls
+            if walls['right']:
+                mid[-1] = mid[-1] + '.#'
+            else:
+                mid[-1] = mid[-1] + '..'
+            if walls['bottom']:
+                bottom.append('##')
+            else:
+                bottom.append('.#')
+            
+            if (index + 1) % COLS == 0:
+                if index == 0:
+                    ascii_grid.append(top)
+                ascii_grid.append(mid)
+                ascii_grid.append(bottom)
+                mid, bottom = ['#'], ['#']
+        return ascii_grid
+        
+    def print_maze(self):
+        
+        ascii_grid = self.create_ascii_grid()
+        
+        for row in ascii_grid:
+            row.append('\n')
+            for block in row:
+                print(block, end = '')    
+            
+    def save_to_csv(self, file_name = 'maze'):
+        
+        ascii_grid = self.create_ascii_grid()
+        
+        with open(file_name.replace('.csv', '') + '.csv', 'w') as file:
+            writer = csv.writer(file)
+            for row in ascii_grid:
+                row = ''.join(row)
+                row = [i for i in row]
+                writer.writerow(row)      
         
     def run(self):
-        while True:
+        while self.loop:
             self.check_events()
             self.draw()
             self.update()
@@ -122,7 +178,10 @@ class Cell:
             neighbors.append(left)
             
         return choice(neighbors) if neighbors else False
+    
         
 if __name__ == "__main__":
     game = Game()
     game.run()
+    game.save_to_csv()
+    game.print_maze()
