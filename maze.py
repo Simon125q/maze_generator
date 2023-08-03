@@ -1,6 +1,5 @@
 import pygame
 import sys
-from random import choice
 import csv
 from settings import *
 from cell import Cell
@@ -49,7 +48,7 @@ class Game:
             self.next_cell.visited = True
             self.stack.append(self.current_cell)
             self.colors.append((min(self.color, 255), 10, 100))
-            self.color += 2
+            self.color += 1
             self.remove_walls()
             self.current_cell = self.next_cell
         elif self.stack:
