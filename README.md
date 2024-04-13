@@ -1,5 +1,5 @@
 # Maze Generator
-Maze generator written in python, it uses DFS algorithm to generate mazes
+Maze generator written in python with pygame library, uses Deep First Search algorithm to generate mazes
 
 ## Demo
 
